@@ -6,6 +6,8 @@ type FieldName string
 // which there is no known/supported EXIF field.
 const UnknownPrefix = "UnknownTag_"
 
+// https://exiftool.org/TagNames/EXIF.html
+
 // Primary EXIF fields
 const (
 	ImageWidth                 FieldName = "ImageWidth"
@@ -87,6 +89,21 @@ const (
 	Sharpness                            = "Sharpness"
 	DeviceSettingDescription             = "DeviceSettingDescription"
 	SubjectDistanceRange                 = "SubjectDistanceRange"
+	OwnerName                            = "OwnerName"
+	SerialNumber                         = "SerialNumber"
+	LensInfo                             = "LensInfo"
+	LensMake                             = "LensMake"
+	LensModel                            = "LensModel"
+	LensSerialNumber                     = "LensSerialNumber"
+	GPSInfo                              = "GPSInfo"
+	OptoElectricConvFactor               = "OptoElectricConvFactor"
+	Interlace                            = "Interlace"
+	TimeZoneOffset                       = "TimeZoneOffset"
+	SelfTimeZone                         = "SelfTimeZone"
+	SensitivityType                      = "SensitivityType"
+	StandardOutputSensitivity            = "StandardOutputSensitivity"
+	RecomendedExposureIndex              = "RecomendedExposureIndex"
+	ISOSpeed                             = "ISOSpeed"
 )
 
 // thumbnail fields
@@ -132,7 +149,8 @@ const (
 
 // interoperability fields
 const (
-	InteroperabilityIndex FieldName = "InteroperabilityIndex"
+	InteroperabilityIndex   FieldName = "InteroperabilityIndex"
+	InteroperabilityVersion           = "InteroperabilityVersion"
 )
 
 var exifFields = map[uint16]FieldName{
@@ -201,8 +219,16 @@ var exifFields = map[uint16]FieldName{
 	0x829D: FNumber,
 	0x8822: ExposureProgram,
 	0x8824: SpectralSensitivity,
+	//0x8825: GPSInfo,
 	0x8827: ISOSpeedRatings,
-	0x8828: OECF,
+	0x8828: OptoElectricConvFactor,
+	0x8829: Interlace,
+	0x882a: TimeZoneOffset,
+	0x882b: SelfTimeZone,
+	0x8830: SensitivityType,
+	0x8831: StandardOutputSensitivity,
+	0x8832: RecomendedExposureIndex,
+	0x8833: ISOSpeed,
 	0x9201: ShutterSpeedValue,
 	0x9202: ApertureValue,
 	0x9203: BrightnessValue,
@@ -237,6 +263,12 @@ var exifFields = map[uint16]FieldName{
 	0xA40A: Sharpness,
 	0xA40B: DeviceSettingDescription,
 	0xA40C: SubjectDistanceRange,
+	0xA430: OwnerName,
+	0xA431: SerialNumber,
+	0xA432: LensInfo,
+	0xA433: LensMake,
+	0xA434: LensModel,
+	0xA435: LensSerialNumber,
 }
 
 var gpsFields = map[uint16]FieldName{
@@ -281,6 +313,7 @@ var interopFields = map[uint16]FieldName{
 	//// Interoperability sub-IFD ///////
 	/////////////////////////////////////
 	0x1: InteroperabilityIndex,
+	0x2: InteroperabilityVersion,
 }
 
 var thumbnailFields = map[uint16]FieldName{

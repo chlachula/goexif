@@ -25,11 +25,25 @@ const (
 	exifPointer    = 0x8769
 	gpsPointer     = 0x8825
 	interopPointer = 0xA005
+
+	myShowMissing = true
 )
 
 // A TagNotPresentError is returned when the requested field is not
 // present in the EXIF.
 type TagNotPresentError FieldName
+
+func mapMerge[K comparable, V any](maps ...map[K]V) map[K]V {
+	out := map[K]V{}
+
+	for _, m := range maps {
+		for k, v := range m {
+			out[k] = v
+		}
+	}
+
+	return out
+}
 
 func (tag TagNotPresentError) Error() string {
 	return fmt.Sprintf("exif: tag %q is not present", string(tag))
@@ -126,11 +140,11 @@ var stagePrefix = map[tiffError]string{
 // in x. If parsing a sub-IFD fails, the error is recorded and
 // parsing continues with the remaining sub-IFDs.
 func (p *parser) Parse(x *Exif) error {
-	x.LoadTags(x.Tiff.Dirs[0], exifFields, false)
+	x.LoadTags(x.Tiff.Dirs[0], exifFields, myShowMissing)
 
 	// thumbnails
 	if len(x.Tiff.Dirs) >= 2 {
-		x.LoadTags(x.Tiff.Dirs[1], thumbnailFields, false)
+		x.LoadTags(x.Tiff.Dirs[1], mapMerge(exifFields, thumbnailFields), myShowMissing)
 	}
 
 	te := make(tiffErrors)
@@ -172,7 +186,7 @@ func loadSubDir(x *Exif, ptr FieldName, fieldMap map[uint16]FieldName) error {
 	if err != nil {
 		return fmt.Errorf("exif: sub-IFD %s decode failed: %v", ptr, err)
 	}
-	x.LoadTags(subDir, fieldMap, false)
+	x.LoadTags(subDir, fieldMap, myShowMissing)
 	return nil
 }
 
@@ -288,6 +302,7 @@ func (x *Exif) LoadTags(d *tiff.Dir, fieldMap map[uint16]FieldName, showMissing 
 	for _, tag := range d.Tags {
 		name := fieldMap[tag.Id]
 		if name == "" {
+			// fmt.Printf("missing tag at LoadTags Id=%d~0x%04x v=%v \n", tag.Id, tag.Id, tag)
 			if !showMissing {
 				continue
 			}
@@ -361,12 +376,12 @@ func ratFloat(num, dem int64) float64 {
 // Tries to parse a Geo degrees value from a string as it was found in some
 // EXIF data.
 // Supported formats so far:
-// - "52,00000,50,00000,34,01180" ==> 52 deg 50'34.0118"
-//   Probably due to locale the comma is used as decimal mark as well as the
-//   separator of three floats (degrees, minutes, seconds)
-//   http://en.wikipedia.org/wiki/Decimal_mark#Hindu.E2.80.93Arabic_numeral_system
-// - "52.0,50.0,34.01180" ==> 52deg50'34.0118"
-// - "52,50,34.01180"     ==> 52deg50'34.0118"
+//   - "52,00000,50,00000,34,01180" ==> 52 deg 50'34.0118"
+//     Probably due to locale the comma is used as decimal mark as well as the
+//     separator of three floats (degrees, minutes, seconds)
+//     http://en.wikipedia.org/wiki/Decimal_mark#Hindu.E2.80.93Arabic_numeral_system
+//   - "52.0,50.0,34.01180" ==> 52deg50'34.0118"
+//   - "52,50,34.01180"     ==> 52deg50'34.0118"
 func parseTagDegreesString(s string) (float64, error) {
 	const unparsableErrorFmt = "Unknown coordinate format: %s"
 	isSplitRune := func(c rune) bool {
