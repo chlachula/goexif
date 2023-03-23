@@ -6,18 +6,18 @@ Suggestions and pull requests are welcome.  Functionality is split into two pack
 The exif package depends on the tiff package. 
 Documentation can be found at http://godoc.org/github.com/rwcarlsen/goexif
 
-Like goexif? - Bitcoin tips welcome: 17w65FVqx196Qp7tfCCSLqyvsHUhiEEa7P
+Fork from https://github.com/rwcarlsen/goexif - rwcarlsen updated to chlachula
 
 To install, in a terminal type:
 
 ```
-go get github.com/rwcarlsen/goexif/exif
+go get github.com/chlachula/goexif/exif
 ```
 
 Or if you just want the tiff package:
 
 ```
-go get github.com/rwcarlsen/goexif/tiff
+go get github.com/chlachula/goexif/tiff
 ```
 
 Example usage:
@@ -30,8 +30,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/rwcarlsen/goexif/exif"
-	"github.com/rwcarlsen/goexif/mknote"
+	"github.com/chlachula/goexif/exif"
+	"github.com/chlachula/goexif/mknote"
 )
 
 func ExampleDecode() {
