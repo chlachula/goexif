@@ -1,6 +1,8 @@
 goexif
 ======
 
+The major reason for this fork is the fact, that commands **go get -x github.com/rwcarlsen/goexif/????** for packages **exif** and **tiff** did not work for me, maybe due to the proxy.golang.org . 
+***
 Provides decoding of basic exif and tiff encoded data. Still in alpha - no guarantees.
 Suggestions and pull requests are welcome.  Functionality is split into two packages - "exif" and "tiff"
 The exif package depends on the tiff package. 
@@ -67,5 +69,7 @@ func ExampleDecode() {
 }
 ```
 
-<!--golang-->
+***
+[Written with Markdown](https://www.markdownguide.org/basic-syntax/)
+
 
