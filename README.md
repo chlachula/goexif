@@ -68,4 +68,4 @@ func ExampleDecode() {
 ```
 
 <!--golang-->
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/5e166f74cdb82b999ccd84e3c4dc4348 "githalytics.com")](http://githalytics.com/rwcarlsen/goexif)
+
