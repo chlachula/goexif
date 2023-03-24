@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	jpeg_APP1 = 0xE1 // after 0xFF APP1 is EXIF
-	jpeg_COMM = 0xFE // after 0xFF JPG comment
+	jpeg_APP1 = 0xE1 // after 0xFF APP1 is EXIF, next two byte are SIZE
+	jpeg_COMM = 0xFE // after 0xFF JPG comment,  next two byte are SIZE
 
 	exifPointer    = 0x8769
 	gpsPointer     = 0x8825
@@ -193,9 +193,10 @@ func loadSubDir(x *Exif, ptr FieldName, fieldMap map[uint16]FieldName) error {
 
 // Exif provides access to decoded EXIF metadata fields and values.
 type Exif struct {
-	Tiff *tiff.Tiff
-	main map[FieldName]*tiff.Tag
-	Raw  []byte
+	Tiff        *tiff.Tiff
+	main        map[FieldName]*tiff.Tag
+	Raw         []byte
+	JpegComment []byte //not part of Exif
 }
 
 // Decode parses EXIF-encoded data from r and returns a queryable Exif
@@ -251,7 +252,8 @@ func Decode(r io.Reader) (*Exif, error) {
 	} else {
 		// Locate the JPEG APP1 header.
 		var sec *appSec
-		sec, err = newAppSec(r, jpeg_APP1)
+		sec, err = newAPP1Section(r)
+		//sec, err = newSectionWithSize(r, jpeg_APP1, jpeg_COMM)
 		if err != nil {
 			return nil, err
 		}
@@ -292,6 +294,22 @@ func Decode(r io.Reader) (*Exif, error) {
 	}
 
 	return x, nil
+}
+
+func ReadJpegComment(r io.Reader) string {
+	// JpegComment in JPEG is stored in the jpeg_COMM marker.
+	// Locate the jpeg_COMM header.
+	var sec *appSec
+	sec, err := newJpegCommentSection(r)
+	if err != nil {
+		return ""
+	}
+	// The UTF-8 representation of the Byte order mark - BOM is the hexadecimal byte sequence EF BB BF
+	i := 0
+	if sec.data[0] == 0xEF && sec.data[1] == 0xBB && sec.data[2] == 0xEF {
+		i = 3
+	}
+	return string(sec.data[i:])
 }
 
 // LoadTags loads tags into the available fields from the tiff Directory
@@ -552,11 +570,28 @@ type appSec struct {
 	data   []byte
 }
 
-// newAppSec finds marker in r and returns the corresponding application data
+func isMarker(b byte, markers []byte) bool {
+	for _, m := range markers {
+		if b == m {
+			return true
+		}
+	}
+	return false
+}
+
+func newAPP1Section(r io.Reader) (*appSec, error) {
+	return newSectionWithSize(r, jpeg_APP1)
+}
+
+func newJpegCommentSection(r io.Reader) (*appSec, error) {
+	return newSectionWithSize(r, jpeg_COMM)
+}
+
+// newSectionWithSize finds marker in r and returns the corresponding application data
 // section.
-func newAppSec(r io.Reader, marker byte) (*appSec, error) {
+func newSectionWithSize(r io.Reader, markers ...byte) (*appSec, error) {
 	br := bufio.NewReader(r)
-	app := &appSec{marker: marker}
+	app := &appSec{}
 	var dataLen int
 
 	// seek to marker
@@ -567,10 +602,11 @@ func newAppSec(r io.Reader, marker byte) (*appSec, error) {
 		c, err := br.ReadByte()
 		if err != nil {
 			return nil, err
-		} else if c != marker {
+		} else if !isMarker(c, markers) {
 			continue
 		}
 
+		app.marker = c
 		dataLenBytes, err := br.Peek(2)
 		if err != nil {
 			return nil, err
