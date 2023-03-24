@@ -20,7 +20,8 @@ import (
 )
 
 const (
-	jpeg_APP1 = 0xE1
+	jpeg_APP1 = 0xE1 // after 0xFF APP1 is EXIF
+	jpeg_COMM = 0xFE // after 0xFF JPG comment
 
 	exifPointer    = 0x8769
 	gpsPointer     = 0x8825
@@ -250,7 +251,7 @@ func Decode(r io.Reader) (*Exif, error) {
 	} else {
 		// Locate the JPEG APP1 header.
 		var sec *appSec
-		sec, err = newAppSec(jpeg_APP1, r)
+		sec, err = newAppSec(r, jpeg_APP1)
 		if err != nil {
 			return nil, err
 		}
@@ -553,7 +554,7 @@ type appSec struct {
 
 // newAppSec finds marker in r and returns the corresponding application data
 // section.
-func newAppSec(marker byte, r io.Reader) (*appSec, error) {
+func newAppSec(r io.Reader, marker byte) (*appSec, error) {
 	br := bufio.NewReader(r)
 	app := &appSec{marker: marker}
 	var dataLen int
